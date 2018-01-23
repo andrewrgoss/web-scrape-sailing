@@ -2,17 +2,17 @@
 __author__ = 'agoss'
 
 from datetime import datetime
+import multiprocessing as multi
 import os
 import re
 
 from bs4 import BeautifulSoup
+import numpy as np
 import requests
 
 
 def main():
     t_start = datetime.now()
-    global page_link
-    global season
 
     print '\n**********START**********\n' + str(t_start.strftime('%Y%m%d__%H:%M:%S'))
 
@@ -25,7 +25,33 @@ def main():
         page_list.insert(len(page_list), base_link + 's' + str(i) + '/')  # spring
         i -= 1
 
-    for page_link in page_list:
+    cpus = multi.cpu_count()
+    workers = []
+    page_bins = chunks(cpus, page_list)  # assign every processor equal amount of pages to work with
+
+    for cpu in range(cpus):
+        print 'CPU ' + str(cpu) + '\n'
+        # process will send corresponding list of pages to the function perform_extraction
+        worker = multi.Process(name=str(cpu), target=perform_extraction, args=(page_bins[cpu],))
+        worker.start()
+        workers.append(worker)
+
+    for worker in workers:
+        worker.join()
+
+    t_end = datetime.now()
+    os.rename('./scores.txt', './' + str(t_end.strftime('%Y%m%d_%H%M%S_')) + 'scores.txt')
+    print '\n**********DONE**********\n' + str(t_end - t_start) + ' elapsed'
+
+
+def chunks(n, page_list):
+    """Splits the list into n chunks"""
+    return np.array_split(page_list, n)
+
+
+def perform_extraction(page_ranges):
+    """Extracts data, does preprocessing, writes the data"""
+    for page_link in page_ranges:
         print '\nScraping web page: ' + page_link
         page_content = get_page_content(page_link)
         season = page_link[-4:-1]
@@ -34,16 +60,12 @@ def main():
         for row in page_content.select('tr[class*="row"]'):
             sub_page = re.findall(r'"([^"]*)"', str(row.next_element.contents[0]))
             print sub_page[0]
-            if 'Team' in str(row.contents[3]):
+            if 'Team' in str(row.contents[3]):  # skip over team scoring regattas
                 continue
             else:
-                perform_sub_page_extraction(sub_page[0])
+                perform_sub_page_extraction(sub_page[0], page_link, season)
             with open("scores.txt", "a") as my_file:
                 my_file.write('\n')
-
-    t_end = datetime.now()
-    os.rename('./scores.txt', './' + str(t_end.strftime('%Y%m%d_%H%M%S_')) + 'scores.txt')
-    print '\n**********DONE**********\n' + str(t_end - t_start) + ' elapsed'
 
 
 def get_page_content(pagelink):
@@ -61,7 +83,7 @@ def get_page_content(pagelink):
         raise  # other exception, catch-all
 
 
-def perform_sub_page_extraction(sub_page):
+def perform_sub_page_extraction(sub_page, page_link, season):
     sub_page_link = page_link + sub_page
     page_content = get_page_content(sub_page_link)
     if page_content is None:
