@@ -13,7 +13,6 @@ import requests
 
 def main():
     t_start = datetime.now()
-
     print '\n**********START**********\n' + str(t_start.strftime('%Y%m%d__%H:%M:%S'))
 
     base_link = 'http://scores.collegesailing.org/'
