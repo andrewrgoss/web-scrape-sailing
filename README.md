@@ -19,7 +19,7 @@ Along with this I used the popular <a href="http://docs.python-requests.org/en/m
 ## Improving Speed with Parallelization
 The initial runtime of my program to scrape regatta scores from each event dating back to 2010 was 0:06:19.282466. Per the guide I referenced, I wanted to try and see if I could cut this down by sending requests in parallel using a <a href="https://docs.python.org/2/library/multiprocessing.html" target=_>multiprocessing</a> package.
 
-By sending requests in parellel I was able to reduce the runtime of my program to 0:01:46.565286 -- about a 24% improvement in speed.
+By sending requests in parallel I was able to reduce the runtime of my program to 0:01:46.565286 -- about a 24% improvement in speed.
 
 ## Next Steps
 No API is available for this site, so I would like to create one using the data that I scraped.
