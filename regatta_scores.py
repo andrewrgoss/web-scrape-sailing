@@ -13,7 +13,7 @@ import requests
 
 def main():
     t_start = datetime.now()
-    print '\n**********START**********\n' + str(t_start.strftime('%Y%m%d__%H:%M:%S'))
+    print('\n**********START**********\n' + str(t_start.strftime('%Y%m%d__%H:%M:%S')))
 
     base_link = 'http://scores.collegesailing.org/'
     page_list = []
@@ -29,7 +29,7 @@ def main():
     page_bins = chunks(cpus, page_list)  # assign every processor equal amount of pages to work with
 
     for cpu in range(cpus):
-        print 'CPU ' + str(cpu) + '\n'
+        print('CPU ' + str(cpu) + '\n')
         # process will send corresponding list of pages to the function perform_extraction
         worker = multi.Process(name=str(cpu), target=perform_extraction, args=(page_bins[cpu],))
         worker.start()
@@ -40,7 +40,7 @@ def main():
 
     t_end = datetime.now()
     os.rename('./scores.txt', './' + str(t_end.strftime('%Y%m%d_%H%M%S_')) + 'scores.txt')
-    print '\n**********DONE**********\n' + str(t_end - t_start) + ' elapsed'
+    print('\n**********DONE**********\n' + str(t_end - t_start) + ' elapsed')
 
 
 def chunks(n, page_list):
@@ -51,14 +51,14 @@ def chunks(n, page_list):
 def perform_extraction(page_ranges):
     """Extracts data, does preprocessing, writes the data"""
     for page_link in page_ranges:
-        print '\nScraping web page: ' + page_link
+        print('\nScraping web page: ' + page_link)
         page_content = get_page_content(page_link)
         season = page_link[-4:-1]
 
-        print 'Extracting all html elements where table row is stored...\n'
+        print('Extracting all html elements where table row is stored...\n')
         for row in page_content.select('tr[class*="row"]'):
             sub_page = re.findall(r'"([^"]*)"', str(row.next_element.contents[0]))
-            print sub_page[0]
+            print(sub_page[0])
             if 'Team' in str(row.contents[3]):  # skip over team scoring regattas
                 continue
             else:
